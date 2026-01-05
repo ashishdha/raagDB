@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scales Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header>
+  <h1>🎼 Scales Database</h1>
+  <nav>
+    <a href="raags.html">Raags</a>
+    <a href="thaats.html">Thaats</a>
+    <a href="scales.html" class="active">Scales</a>
+    <a href="tetrachords.html">Tetrachords</a>
+    <button class="menu-btn">☰ Menu</button>
+    <div class="menu-dropdown"></div>
+  </nav>
+</header>
+
+<main>
+
+  <!-- FILTER CONTROLS -->
+  <div class="controls">
+
+    <div class="control-row">
+      <div class="filter-group">
+        <label>ID</label>
+        <input type="number" id="id-min" placeholder="Min">
+        <input type="number" id="id-max" placeholder="Max">
+      </div>
+
+      <div class="filter-group">
+        <label>Thaat ID</label>
+        <input type="number" id="thaat-id">
+      </div>
+
+      <div class="filter-group">
+        <label>Jaati</label>
+        <input type="number" id="jaati-min" placeholder="Min">
+        <input type="number" id="jaati-max" placeholder="Max">
+      </div>
+
+      <div class="filter-group">
+        <label>Symmetry Score</label>
+        <input type="number" id="symmetry-min" placeholder="Min">
+        <input type="number" id="symmetry-max" placeholder="Max">
+      </div>
+    </div>
+
+    <div class="control-row">
+      <button onclick="applyFilters()">Apply Filters</button>
+      <button onclick="resetFilters()">Reset</button>
+    </div>
+
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr id="header-row"></tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="20">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  <p>Hindustani Scale Database</p>
+</footer>
+
+<script src="svarmap.js"></script>
+<script src="database.js"></script>
+<script src="table-utils.js"></script>
+
+<script>
+let allScales = [];
+
+/* -----------------------------
+   PAGE INIT
+------------------------------ */
+document.addEventListener('DOMContentLoaded', async () => {
+  initializePage('scales');
+  showLoading();
+
+  try {
+    allScales = await fetchTableData('scales');
+    allScales.sort((a, b) => a.id - b.id);
+    buildHeaders(allScales);
+    renderTable(allScales);
+    setupSorting(document.querySelector('table'));
+  } catch (e) {
+    showError(e.message);
+  }
+});
+
+/* -----------------------------
+   HEADER GENERATION
+------------------------------ */
+function buildHeaders(data) {
+  const headerRow = document.getElementById('header-row');
+  headerRow.innerHTML = '';
+
+  Object.keys(data[0]).forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col.replace(/_/g, ' ').toUpperCase();
+    th.dataset.column = col;
+    th.classList.add('sortable');
+    headerRow.appendChild(th);
+  });
+}
+
+/* -----------------------------
+   FILTERING
+------------------------------ */
+function applyFilters() {
+  let filtered = [...allScales];
+
+  filtered = numericRangeFilter(filtered, 'id', 'id-min', 'id-max');
+  filtered = numericRangeFilter(filtered, 'jaati', 'jaati-min', 'jaati-max');
+  filtered = numericRangeFilter(filtered, 'symmetry_score', 'symmetry-min', 'symmetry-max');
+
+  const thaatId = document.getElementById('thaat-id').value;
+  if (thaatId) {
+    filtered = filtered.filter(r => r.thaat_id == thaatId);
+  }
+
+  renderTable(filtered);
+  setupSorting(document.querySelector('table'));
+}
+
+function resetFilters() {
+  document.querySelectorAll('.controls input').forEach(i => i.value = '');
+  allScales.sort((a, b) => a.id - b.id);
+  renderTable(allScales);
+  setupSorting(document.querySelector('table'));
+}
+
+function numericRangeFilter(data, column, minId, maxId) {
+  const min = document.getElementById(minId)?.value;
+  const max = document.getElementById(maxId)?.value;
+
+  return data.filter(r => {
+    if (min && r[column] < min) return false;
+    if (max && r[column] > max) return false;
+    return true;
+  });
+}
+</script>
+
+</body>
+</html>
