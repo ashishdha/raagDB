@@ -105,6 +105,24 @@ function setupNotationRadios() {
   });
 }
 
+// CHATGPT ADDITION
+/**
+ * Detects a binary svar array:
+ * - exactly 12 elements
+ * - numbers only
+ * - values restricted to 0 or 1
+ */
+function isBinarySvarArray(value) {
+  return (
+    Array.isArray(value) &&
+    value.length === 12 &&
+    value.every(
+      v => typeof v === 'number' && (v === 0 || v === 1)
+    )
+  );
+}
+
+
 // Table sorting
 function setupSorting(tableElement) {
   if (!tableElement) return;
@@ -189,6 +207,14 @@ function renderTable(data) {
       const td = document.createElement('td');
       let value = row[column];
       
+	  // CHATGPT ADDITION
+	  // SPECIAL CASE: binary svar sets (display raw, no sargam mapping)
+		if (isBinarySvarArray(value)) {
+		  td.textContent = value.join(' ');
+		  tr.appendChild(td);
+		  return;
+		}
+
       // Format based on data type
       if (value === null || value === undefined) {
         td.textContent = '-';

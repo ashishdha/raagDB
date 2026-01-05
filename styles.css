@@ -281,6 +281,7 @@ td {
   border-bottom: 1px solid var(--medium-purple);
   color: var(--electric-turquoise);
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 tbody tr {
